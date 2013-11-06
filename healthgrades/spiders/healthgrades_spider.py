@@ -111,10 +111,16 @@ class HealthgradesSpider(BaseSpider):
 
 
                 # Get years in practice
-                years = driver.find_element_by_xpath("//li[@class='dataDebug yearsOfPractice']/a").text
-                years = re.findall(r"[\w'|-]+", years)
-                years = years[0]
-
+                try:
+                    if isenhanced:
+                        years = driver.find_element_by_xpath("//div[@class='listing'][" + str(enhancedlisting) + "]/div[@class='listingInformationColumn']/div[@class='listingBody clearfix']/div[@class='listingCenterColumn']/div[@class='listingProfileContent']/ul/li[@class='dataDebug yearsOfPractice']/a").text
+                    else:
+                        years = driver.find_element_by_xpath("/div[@class='listing'][" + str(listing) + "]/div[@class='listingInformationColumn']/div[@class='listingBody clearfix']/div[@class='listingCenterColumn']/div[@class='listingProfileContent']/ul/li[@class='dataDebug yearsOfPractice']/a").text
+ 
+                    years = re.findall(r"[\w'|-]+", years)
+                    years = years[0]
+                except NoSuchElementException:
+                    years = "Not Listed"
 
                 # Create and yield item
                 item = HealthgradesItem()
