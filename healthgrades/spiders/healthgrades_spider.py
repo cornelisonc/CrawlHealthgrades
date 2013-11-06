@@ -54,7 +54,7 @@ class HealthgradesSpider(BaseSpider):
 
             for doctor in doctors:
 
-                name = driver.find_element_by_xpath(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']")
+                name = doctor.find_element_by_xpath(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']")
 
                 # Get name and degree
                 text = name.text
@@ -67,7 +67,7 @@ class HealthgradesSpider(BaseSpider):
 
 
                 # Get years in practice
-                years = driver.find_element_by_xpath(".//div[@class='listingBody clearfix']/div[@class='listingCenterColumn']/div[@class='listingProfileContent']/ul/li[@class='dataDebug yearsOfPractice']/a").text
+                years = doctor.find_element_by_xpath(".//div[@class='listingBody clearfix']/div[@class='listingCenterColumn']/div[@class='listingProfileContent']/ul/li[@class='dataDebug yearsOfPractice']/a").text
 
                 years = re.findall(r"[\w'|-]+", years)
                 years = years[0]
