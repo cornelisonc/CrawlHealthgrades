@@ -54,8 +54,11 @@ class HealthgradesSpider(BaseSpider):
 
             for doctor in doctors:
 
-                name = doctor.find_element_by_xpath(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']")
-
+                try:
+                    name = doctor.find_element_by_xpath(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']")
+                except NoSuchElementException:
+                    print doctor.text
+                    name ="No Name Name Name"
                 # Get name and degree
                 text = name.text
 
@@ -67,10 +70,12 @@ class HealthgradesSpider(BaseSpider):
 
 
                 # Get years in practice
-                years = doctor.find_element_by_xpath(".//div[@class='listingBody clearfix']/div[@class='listingCenterColumn']/div[@class='listingProfileContent']/ul/li[@class='dataDebug yearsOfPractice']/a").text
-
-                years = re.findall(r"[\w'|-]+", years)
-                years = years[0]
+                try:
+                    years = doctor.find_element_by_partial_link_text("Years of Practice").text
+                    years = re.findall(r"[\w'|-]+", years)
+                    years = years[0]
+                except NoSuchElementException:
+                    years = "Years not listed"
 
                 # Create and yield item
                 item = HealthgradesItem()
