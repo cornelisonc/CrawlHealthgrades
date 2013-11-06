@@ -48,57 +48,13 @@ class HealthgradesSpider(BaseSpider):
 
         while current_page <= 5: #no_pages:
 
-            # First doctor listing must be handled seperately
-
-            # Get name and degree
-            try:
-                name = driver.find_element_by_xpath("//div[@class='listing first']/div[@class='listingInformationColumn']/div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']").text
-            except NoSuchElementException: 
-                name = driver.find_element_by_xpath("//div[@class='listing enhancedlisting first']/div[@class='listingOuter']/div[@class='listingInner']/div[@class='listingInformationColumn']/div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']").text
-
-            split_text = re.findall(r"[\w'|-]+", name)
-            degree = split_text[-1]
-
-            split_text.pop()
-            name = ' '.join(split_text)
-
-
-            # Get years in practice
-            try:
-                years = driver.find_element_by_xpath("//div[@class='listing first']/div[@class='listingInformationColumn']/div[@class='listingBody clearfix']/div[@class='listingCenterColumn']/div[@class='listingProfileContent']/ul/li[@class='dataDebug yearsOfPractice']/a").text
-            except NoSuchElementException:
-                years = driver.find_element_by_xpath("//div[@class='listing enhancedlisting first']/div[@class='listingOuter']/div[@class='listingInner']/div[@class='listingInformationColumn']/div[@class='listingBody clearfix']/div[@class='listingCenterColumn']/div[@class='listingProfileContent']/ul/li[@class='dataDebug'][1]/a").text
-
-            years = re.findall(r"[\w'|-]+", years)
-            years = years[0]
-
-
-            # Create and yield item
-            item = HealthgradesItem()
-            item['Name'] = name
-            item['Degree'] = degree
-            item['YearsInPractice'] = years
-
-            yield item
-
             doctors = []
-            listing = 1
-            enhancedlisting = 1
 
             doctors.extend(driver.find_elements_by_xpath("//div[@class='listingInformationColumn']"))
-            doctors.pop(0) # Doctor 0 will be first doc, already scraped
 
             for doctor in doctors:
-                isenhanced = False
 
-                try:
-                    name = driver.find_element_by_xpath("//div[@class='listing'][" + str(listing) + "]/div[@class='listingInformationColumn']/div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']")
-                    isenhanced = False
-                    listing += 1
-                except NoSuchElementException:
-                    name = driver.find_element_by_xpath("//div[@class='listing enhancedlisting'][" + str(enhancedlisting) + "]/div[@class='listingOuter']/div[@class='listingInner']/div[@class='listingInformationColumn']/div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']")
-                    isenhanced = True
-                    enhancedlisting += 1
+                name = driver.find_element_by_xpath(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']")
 
                 # Get name and degree
                 text = name.text
@@ -111,16 +67,10 @@ class HealthgradesSpider(BaseSpider):
 
 
                 # Get years in practice
-                try:
-                    if isenhanced:
-                        years = driver.find_element_by_xpath("//div[@class='listing'][" + str(enhancedlisting) + "]/div[@class='listingInformationColumn']/div[@class='listingBody clearfix']/div[@class='listingCenterColumn']/div[@class='listingProfileContent']/ul/li[@class='dataDebug yearsOfPractice']/a").text
-                    else:
-                        years = driver.find_element_by_xpath("/div[@class='listing'][" + str(listing) + "]/div[@class='listingInformationColumn']/div[@class='listingBody clearfix']/div[@class='listingCenterColumn']/div[@class='listingProfileContent']/ul/li[@class='dataDebug yearsOfPractice']/a").text
- 
-                    years = re.findall(r"[\w'|-]+", years)
-                    years = years[0]
-                except NoSuchElementException:
-                    years = "Not Listed"
+                years = driver.find_element_by_xpath(".//div[@class='listingBody clearfix']/div[@class='listingCenterColumn']/div[@class='listingProfileContent']/ul/li[@class='dataDebug yearsOfPractice']/a").text
+
+                years = re.findall(r"[\w'|-]+", years)
+                years = years[0]
 
                 # Create and yield item
                 item = HealthgradesItem()
