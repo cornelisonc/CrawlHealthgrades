@@ -24,7 +24,7 @@ class HealthgradesSpider(BaseSpider):
     def __init__(self, **kwargs):
         self.driver = webdriver.Firefox()
         driver = self.driver
-        driver.implicitly_wait(30)
+        driver.implicitly_wait(5)
         driver.get("http://www.healthgrades.com/find-a-doctor")
 
         state_form_entry = driver.find_element_by_id('multi_search_location_textbox')
@@ -47,13 +47,61 @@ class HealthgradesSpider(BaseSpider):
         next_page = 2
 
         while current_page <= 5: #no_pages:
-            links = []
 
-            links.extend(driver.find_elements_by_xpath("//h2/a[@class='providerSearchResultSelectAction']"))
+            # First doctor listing must be handled seperately
 
-            for link in links:
+            # Get name and degree
+            try:
+                name = driver.find_element_by_xpath("//div[@class='listing first']/div[@class='listingInformationColumn']/div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']").text
+            except NoSuchElementException: 
+                name = driver.find_element_by_xpath("//div[@class='listing enhancedlisting first']/div[@class='listingOuter']/div[@class='listingInner']/div[@class='listingInformationColumn']/div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']").text
 
-                text = link.text
+            split_text = re.findall(r"[\w'|-]+", name)
+            degree = split_text[-1]
+
+            split_text.pop()
+            name = ' '.join(split_text)
+
+
+            # Get years in practice
+            try:
+                years = driver.find_element_by_xpath("//div[@class='listing first']/div[@class='listingInformationColumn']/div[@class='listingBody clearfix']/div[@class='listingCenterColumn']/div[@class='listingProfileContent']/ul/li[@class='dataDebug yearsOfPractice']/a").text
+            except NoSuchElementException:
+                years = driver.find_element_by_xpath("//div[@class='listing enhancedlisting first']/div[@class='listingOuter']/div[@class='listingInner']/div[@class='listingInformationColumn']/div[@class='listingBody clearfix']/div[@class='listingCenterColumn']/div[@class='listingProfileContent']/ul/li[@class='dataDebug'][1]/a").text
+
+            years = re.findall(r"[\w'|-]+", years)
+            years = years[0]
+
+
+            # Create and yield item
+            item = HealthgradesItem()
+            item['Name'] = name
+            item['Degree'] = degree
+            item['YearsInPractice'] = years
+
+            yield item
+
+            doctors = []
+            listing = 1
+            enhancedlisting = 1
+
+            doctors.extend(driver.find_elements_by_xpath("//div[@class='listingInformationColumn']"))
+            doctors.pop(0) # Doctor 0 will be first doc, already scraped
+
+            for doctor in doctors:
+                isenhanced = False
+
+                try:
+                    name = driver.find_element_by_xpath("//div[@class='listing'][" + str(listing) + "]/div[@class='listingInformationColumn']/div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']")
+                    isenhanced = False
+                    listing += 1
+                except NoSuchElementException:
+                    name = driver.find_element_by_xpath("//div[@class='listing enhancedlisting'][" + str(enhancedlisting) + "]/div[@class='listingOuter']/div[@class='listingInner']/div[@class='listingInformationColumn']/div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']")
+                    isenhanced = True
+                    enhancedlisting += 1
+
+                # Get name and degree
+                text = name.text
 
                 split_text = re.findall(r"[\w'|-]+", text)
                 degree = split_text[-1]
@@ -61,9 +109,18 @@ class HealthgradesSpider(BaseSpider):
                 split_text.pop()
                 name = ' '.join(split_text)
 
+
+                # Get years in practice
+                years = driver.find_element_by_xpath("//li[@class='dataDebug yearsOfPractice']/a").text
+                years = re.findall(r"[\w'|-]+", years)
+                years = years[0]
+
+
+                # Create and yield item
                 item = HealthgradesItem()
                 item['Name'] = name
                 item['Degree'] = degree
+                item['YearsInPractice'] = years
 
                 yield item
 

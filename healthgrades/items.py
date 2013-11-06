@@ -8,4 +8,5 @@ from scrapy.item import Item, Field
 class HealthgradesItem(Item):
     Name = Field()
     Degree = Field()
+    YearsInPractice = Field()
     pass
