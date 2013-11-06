@@ -36,5 +36,9 @@ class HealthgradesSpider(BaseSpider):
         super(HealthgradesSpider, self).__init__()
 
     def parse(self, response):
-        filename = response.url.split("/")[-2]
-        open(filename, 'wb').write(response.body)
+        driver = self.driver
+
+        no_pages = driver.find_element_by_xpath("//span[@class='pagination']/span[3]")
+        no_pages = re.findall(r'\d+', no_pages.text)
+        no_pages = int(no_pages[0])
+        print no_pages
