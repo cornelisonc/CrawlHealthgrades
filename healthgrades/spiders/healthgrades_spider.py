@@ -38,7 +38,46 @@ class HealthgradesSpider(BaseSpider):
     def parse(self, response):
         driver = self.driver
 
+        # Get number of pages to flip through pagination
         no_pages = driver.find_element_by_xpath("//span[@class='pagination']/span[3]")
         no_pages = re.findall(r'\d+', no_pages.text)
         no_pages = int(no_pages[0])
-        print no_pages
+        
+        current_page = 1
+        next_page = 2
+
+        while current_page <= 5: #no_pages:
+            links = []
+
+            links.extend(driver.find_elements_by_xpath("//h2/a[@class='providerSearchResultSelectAction']"))
+
+            for link in links:
+
+                text = link.text
+
+                split_text = re.findall(r"[\w'|-]+", text)
+                degree = split_text[-1]
+
+                split_text.pop()
+                name = ' '.join(split_text)
+
+                item = HealthgradesItem()
+                item['Name'] = name
+                item['Degree'] = degree
+
+                yield item
+
+            if current_page == no_pages:
+                driver.quit()
+
+            if no_pages > 1 and current_page != no_pages:
+                next_page_link = driver.find_element_by_xpath("//a[@class='paginationRight']")
+
+            if current_page != no_pages:
+                next_page_link.click()
+            
+            current_page = next_page
+            next_page += 1
+
+        driver.quit()
+            
