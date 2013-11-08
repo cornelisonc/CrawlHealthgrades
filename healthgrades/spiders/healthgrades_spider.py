@@ -46,42 +46,60 @@ class HealthgradesSpider(BaseSpider):
         current_page = 1
         next_page = 2
 
-        while current_page <= 5: #no_pages:
+        while current_page <= 1: #no_pages:
 
             doctors = []
-
             doctors.extend(driver.find_elements_by_xpath("//div[@class='listingInformationColumn']"))
 
             for doctor in doctors:
 
-                try:
-                    name = doctor.find_element_by_xpath(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']")
-                except NoSuchElementException:
-                    print doctor.text
-                    name ="No Name Name Name"
                 # Get name and degree
-                text = name.text
-
-                split_text = re.findall(r"[\w'|-]+", text)
+                name = doctor.find_element_by_xpath(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']").text
+                split_text = re.findall(r"[\w'|-]+", name)
+                
                 degree = split_text[-1]
-
                 split_text.pop()
+                
                 name = ' '.join(split_text)
 
 
                 # Get years in practice
+                # try:
+                #     years = doctor.find_element_by_partial_link_text("Years of Practice").text
+                #     years = re.findall(r"[\w'|-]+", years)
+                #     years = years[0]
+                # except NoSuchElementException:
+                #     years = "Years not listed"
+
+
+                # Get office numbers and addresses
                 try:
-                    years = doctor.find_element_by_partial_link_text("Years of Practice").text
-                    years = re.findall(r"[\w'|-]+", years)
-                    years = years[0]
+                    doctor.find_element_by_partial_link_text("more)").click()
                 except NoSuchElementException:
-                    years = "Years not listed"
+                    pass
+
+                try:
+                    numOffices = doctor.find_element_by_partial_link_text("Office Location").text
+                    numOffices = re.findall(r"[\w'|-]+", numOffices)
+                    numOffices = numOffices[0]
+                except NoSuchElementException:
+                    numOffices = "Offices not listed"
+
+                officeAddresses = ""
+
+                for office in doctor.find_elements_by_xpath(".//div[@class='addresses']/div[contains(@class, 'address')]"):
+                    thisOffice = office.text.replace(' (less)','')
+                    officeAddresses += thisOffice
+                    officeAddresses += ";"
+
 
                 # Create and yield item
-                item = HealthgradesItem()
-                item['Name'] = name
-                item['Degree'] = degree
-                item['YearsInPractice'] = years
+                item                    = HealthgradesItem()
+                item['Name']            = name
+                item['Degree']          = degree
+                item['YearsInPractice'] = get_years_in_practice(doctor)
+                item['NumOffices']      = numOffices
+                item['OfficeLocations'] = officeAddresses
 
                 yield item
 
@@ -98,4 +116,13 @@ class HealthgradesSpider(BaseSpider):
             next_page += 1
 
         driver.quit()
+
+# Helper Functions
+def get_years_in_practice( doctor ):
+    try:
+        years = doctor.find_element_by_partial_link_text("Years of Practice").text
+        years = re.findall(r"[\w'|-]+", years)
+        return years[0]
+    except NoSuchElementException:
+        return "Years not listed"
             

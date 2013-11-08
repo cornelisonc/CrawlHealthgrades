@@ -9,4 +9,6 @@ class HealthgradesItem(Item):
     Name = Field()
     Degree = Field()
     YearsInPractice = Field()
+    NumOffices = Field()
+    OfficeLocations = Field()
     pass
