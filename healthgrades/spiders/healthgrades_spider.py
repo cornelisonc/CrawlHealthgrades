@@ -54,8 +54,10 @@ class HealthgradesSpider(BaseSpider):
             for doctor in doctors:
 
                 # Get name and degree
-                name = doctor.find_element_by_xpath(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']").text
-                split_text = re.findall(r"[\w'|-]+", name)
+                doctor_name_link    = doctor.find_element_by_xpath(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']")
+                
+                name                = doctor_name_link.text
+                split_text          = re.findall(r"[\w'|-]+", name)
                 
                 degree = split_text[-1]
                 split_text.pop()
@@ -68,6 +70,11 @@ class HealthgradesSpider(BaseSpider):
                 except NoSuchElementException:
                     pass
 
+                # Get doctor hash for inner pages
+                doctor_hash = doctor_name_link.get_attribute("href")
+                doctor_hash = doctor_hash.replace('http://www.healthgrades.com/physician/', '')
+
+                get_insurance_accepted(doctor_hash)
 
                 # Create and yield item
                 item                    = HealthgradesItem()
@@ -120,3 +127,4 @@ def get_office_addresses( doctor ):
         officeAddresses += ";"
 
     return officeAddresses
+    
