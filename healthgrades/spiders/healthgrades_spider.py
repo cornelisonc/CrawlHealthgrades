@@ -62,35 +62,11 @@ class HealthgradesSpider(BaseSpider):
                 
                 name = ' '.join(split_text)
 
-
-                # Get years in practice
-                # try:
-                #     years = doctor.find_element_by_partial_link_text("Years of Practice").text
-                #     years = re.findall(r"[\w'|-]+", years)
-                #     years = years[0]
-                # except NoSuchElementException:
-                #     years = "Years not listed"
-
-
-                # Get office numbers and addresses
+                # Expand all the office links
                 try:
                     doctor.find_element_by_partial_link_text("more)").click()
                 except NoSuchElementException:
                     pass
-
-                try:
-                    numOffices = doctor.find_element_by_partial_link_text("Office Location").text
-                    numOffices = re.findall(r"[\w'|-]+", numOffices)
-                    numOffices = numOffices[0]
-                except NoSuchElementException:
-                    numOffices = "Offices not listed"
-
-                officeAddresses = ""
-
-                for office in doctor.find_elements_by_xpath(".//div[@class='addresses']/div[contains(@class, 'address')]"):
-                    thisOffice = office.text.replace(' (less)','')
-                    officeAddresses += thisOffice
-                    officeAddresses += ";"
 
 
                 # Create and yield item
@@ -98,8 +74,8 @@ class HealthgradesSpider(BaseSpider):
                 item['Name']            = name
                 item['Degree']          = degree
                 item['YearsInPractice'] = get_years_in_practice(doctor)
-                item['NumOffices']      = numOffices
-                item['OfficeLocations'] = officeAddresses
+                item['NumOffices']      = get_number_of_offices(doctor)
+                item['OfficeLocations'] = get_office_addresses(doctor)
 
                 yield item
 
@@ -125,4 +101,22 @@ def get_years_in_practice( doctor ):
         return years[0]
     except NoSuchElementException:
         return "Years not listed"
-            
+
+def get_number_of_offices( doctor ):
+    try:
+        numOffices = doctor.find_element_by_partial_link_text("Office Location").text
+        numOffices = re.findall(r"[\w'|-]+", numOffices)
+        numOffices = numOffices[0]
+    except NoSuchElementException:
+        numOffices = "Offices not listed"
+
+    return numOffices
+
+def get_office_addresses( doctor ):
+    officeAddresses = ""
+    for office in doctor.find_elements_by_xpath(".//div[@class='addresses']/div[contains(@class, 'address')]"):
+        thisOffice = office.text.replace(' (less)','')
+        officeAddresses += thisOffice
+        officeAddresses += ";"
+
+    return officeAddresses
