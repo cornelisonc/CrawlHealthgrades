@@ -46,7 +46,7 @@ class HealthgradesSpider(BaseSpider):
         current_page = 1
         next_page = 2
 
-        while current_page <= 1: #no_pages:
+        while current_page <= no_pages:
 
             doctors = []
             doctors.extend(driver.find_elements_by_xpath("//div[@class='listingInformationColumn']"))
@@ -70,19 +70,13 @@ class HealthgradesSpider(BaseSpider):
                 except NoSuchElementException:
                     pass
 
-                # Get doctor hash for inner pages
-                doctor_hash = doctor_name_link.get_attribute("href")
-                doctor_hash = doctor_hash.replace('http://www.healthgrades.com/physician/', '')
-
-                get_insurance_accepted(doctor_hash)
-
-                # Create and yield item
-                item                    = HealthgradesItem()
-                item['Name']            = name
-                item['Degree']          = degree
-                item['YearsInPractice'] = get_years_in_practice(doctor)
-                item['NumOffices']      = get_number_of_offices(doctor)
-                item['OfficeLocations'] = get_office_addresses(doctor)
+                item = Request(url=doctor_name_link.get_attribute("href") + "/appointment",
+                    callback=self.get_accepted_insurance_carriers)
+                item.meta['Name']            = name
+                item.meta['Degree']          = degree
+                item.meta['YearsInPractice'] = get_years_in_practice(doctor)
+                item.meta['NumOffices']      = get_number_of_offices(doctor)
+                item.meta['OfficeLocations'] = get_office_addresses(doctor)
 
                 yield item
 
@@ -99,6 +93,36 @@ class HealthgradesSpider(BaseSpider):
             next_page += 1
 
         driver.quit()
+
+    def get_accepted_insurance_carriers(self, response):
+        hxs = HtmlXPathSelector(response)
+
+        insurance_carriers = hxs.select("///div[@id='appointmentsInsuranceAccepted']/div[@class='componentPresentationFull']/div[@class='componentPresentationContent']/ul/li").extract()
+
+        if not insurance_carriers:
+            insurance_carriers = hxs.select("//div[@class='insurancesAccepted']/ul[@class='noBottomMargin']/li").extract()
+
+        if (insurance_carriers):
+            semicolon_delimited = ''
+            for insurance_carrier in insurance_carriers:
+                insurance_carrier = insurance_carrier.replace('</li></ul></li>', '')
+                insurance_carrier = re.sub(r"</?a.*?>", "", insurance_carrier)
+                insurance_carrier = insurance_carrier.replace('<li><span>', '').replace('</span></li>', '')
+                split_html = insurance_carrier.split('<li>')
+                insurance_carrier = split_html[-1]
+                semicolon_delimited += str(insurance_carrier) + ';'
+        else:
+            semicolon_delimited = ("No insurance carriers listed")
+
+        item                    = HealthgradesItem()
+        item['Name']            = response.meta['Name']
+        item['Degree']          = response.meta['Degree']
+        item['YearsInPractice'] = response.meta['YearsInPractice']
+        item['NumOffices']      = response.meta['NumOffices']
+        item['OfficeLocations'] = response.meta['OfficeLocations']
+        item['AcceptedInsurers']= semicolon_delimited
+
+        return item
 
 # Helper Functions
 def get_years_in_practice( doctor ):
@@ -127,4 +151,3 @@ def get_office_addresses( doctor ):
         officeAddresses += ";"
 
     return officeAddresses
-    
