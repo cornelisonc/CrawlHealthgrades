@@ -70,16 +70,6 @@ class HealthgradesSpider(BaseSpider):
                 except NoSuchElementException:
                     pass
 
-                # Get number of insurance carriers
-                # try:
-                #     insurance_carrier_link  = doctor.find_element_by_xpath(".//div[@class='listingProfileContent']/ul/li[@class='dataDebug'][3]/a")
-                # except NoSuchElementException:
-                #     insurance_carrier_link  = doctor.find_element_by_xpath(".//div[@class='listingProfileContent']/ul/li[@class='dataDebug insuranceCarriers']/a")
-                
-                # num_insurance_carriers  = insurance_carrier_link.text
-                # split_ins               = re.findall(r"[\w'|-]+", num_insurance_carriers)
-                # num_insurance_carriers  = split_ins[0]
-
                 item = Request(url=doctor_name_link.get_attribute("href") + "/appointment",
                     callback=self.get_accepted_insurance_carriers)
                 item.meta['Name']            = name
@@ -109,7 +99,7 @@ class HealthgradesSpider(BaseSpider):
         hxs = HtmlXPathSelector(response)
 
         insurance_carriers = hxs.select("///div[@id='appointmentsInsuranceAccepted']/div[@class='componentPresentationFull']/div[@class='componentPresentationContent']/ul/li").extract()
-        insurance_carriers.extend(hxs.select("///div[@class='insurancesAccepted']/div[@class='expand-section']/ul[@class='noBottomMargin noTopMargin']/li").extract())
+        more_insurance_carriers = hxs.select("///div[@class='insurancesAccepted']/div[@class='expand-section']/ul[@class='noBottomMargin noTopMargin']/li").extract()
 
         if not insurance_carriers:
             insurance_carriers = hxs.select("//div[@class='insurancesAccepted']/ul[@class='noBottomMargin']/li").extract()
@@ -123,8 +113,18 @@ class HealthgradesSpider(BaseSpider):
                 split_html = insurance_carrier.split('<li>')
                 insurance_carrier = split_html[-1]
                 semicolon_delimited += str(insurance_carrier) + ';'
+
         else:
             semicolon_delimited = ("No insurance carriers listed")
+            
+        if(more_insurance_carriers):
+            for insurance_carrier in more_insurance_carriers:
+                insurance_carrier = insurance_carrier.replace('</li></ul></li>', '')
+                insurance_carrier = re.sub(r"</?a.*?>", "", insurance_carrier)
+                insurance_carrier = insurance_carrier.replace('<li><span>', '').replace('</span></li>', '')
+                split_html = insurance_carrier.split('<li>')
+                insurance_carrier = split_html[-1]
+                semicolon_delimited += str(insurance_carrier) + ';'
 
         item                    = HealthgradesItem()
         item['Name']            = response.meta['Name']

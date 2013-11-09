@@ -10,7 +10,7 @@ Things I'll need to get:
 --Years in Practice
 --Num Hospital Affiliations
 --Hospitals
---Num Insurance Carriers
+**Num Insurance Carriers
 **Which Insurance Carriers
 --Med School?
 --Internship, with year?
