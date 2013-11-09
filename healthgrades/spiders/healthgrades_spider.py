@@ -46,7 +46,7 @@ class HealthgradesSpider(BaseSpider):
         current_page = 1
         next_page = 2
 
-        while current_page <= no_pages:
+        while current_page <= 1: #no_pages:
 
             doctors = []
             doctors.extend(driver.find_elements_by_xpath("//div[@class='listingInformationColumn']"))
@@ -70,6 +70,16 @@ class HealthgradesSpider(BaseSpider):
                 except NoSuchElementException:
                     pass
 
+                # Get number of insurance carriers
+                try:
+                    insurance_carrier_link  = doctor.find_element_by_xpath(".//div[@class='listingProfileContent']/ul/li[@class='dataDebug'][3]/a")
+                except NoSuchElementException:
+                    insurance_carrier_link  = doctor.find_element_by_xpath(".//div[@class='listingProfileContent']/ul/li[@class='dataDebug insuranceCarriers']/a")
+                
+                num_insurance_carriers  = insurance_carrier_link.text
+                split_ins               = re.findall(r"[\w'|-]+", num_insurance_carriers)
+                num_insurance_carriers  = split_ins[0]
+
                 item = Request(url=doctor_name_link.get_attribute("href") + "/appointment",
                     callback=self.get_accepted_insurance_carriers)
                 item.meta['Name']            = name
@@ -77,6 +87,7 @@ class HealthgradesSpider(BaseSpider):
                 item.meta['YearsInPractice'] = get_years_in_practice(doctor)
                 item.meta['NumOffices']      = get_number_of_offices(doctor)
                 item.meta['OfficeLocations'] = get_office_addresses(doctor)
+                item.meta['NumInsurers']     = num_insurance_carriers
 
                 yield item
 
@@ -98,6 +109,7 @@ class HealthgradesSpider(BaseSpider):
         hxs = HtmlXPathSelector(response)
 
         insurance_carriers = hxs.select("///div[@id='appointmentsInsuranceAccepted']/div[@class='componentPresentationFull']/div[@class='componentPresentationContent']/ul/li").extract()
+        insurance_carriers.extend(hxs.select("///div[@class='insurancesAccepted']/div[@class='expand-section']/ul[@class='noBottomMargin noTopMargin']/li").extract())
 
         if not insurance_carriers:
             insurance_carriers = hxs.select("//div[@class='insurancesAccepted']/ul[@class='noBottomMargin']/li").extract()
@@ -120,6 +132,7 @@ class HealthgradesSpider(BaseSpider):
         item['YearsInPractice'] = response.meta['YearsInPractice']
         item['NumOffices']      = response.meta['NumOffices']
         item['OfficeLocations'] = response.meta['OfficeLocations']
+        item['NumInsurers']     = response.meta['NumInsurers']
         item['AcceptedInsurers']= semicolon_delimited
 
         return item

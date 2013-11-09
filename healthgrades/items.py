@@ -11,5 +11,6 @@ class HealthgradesItem(Item):
     YearsInPractice 	= Field()
     NumOffices 			= Field()
     OfficeLocations 	= Field()
+    NumInsurers			= Field()
     AcceptedInsurers 	= Field()
     pass
