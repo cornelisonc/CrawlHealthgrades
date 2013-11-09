@@ -4,7 +4,7 @@ CrawlHealthgrades
 Things I'll need to get:
 **Doc's Name
 **Degree
---Specialties(;)
+**Specialties(;)
 **Num Office Locations
 **Office Addresses
 **Years in Practice

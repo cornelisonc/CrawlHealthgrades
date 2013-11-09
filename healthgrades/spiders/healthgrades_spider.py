@@ -72,12 +72,14 @@ class HealthgradesSpider(BaseSpider):
 
                 item = Request(url=doctor_name_link.get_attribute("href") + "/appointment",
                     callback=self.get_accepted_insurance_carriers)
-                item.meta['Name']            = name
-                item.meta['Degree']          = degree
-                item.meta['YearsInPractice'] = get_years_in_practice(doctor)
-                item.meta['NumOffices']      = get_number_of_offices(doctor)
-                item.meta['OfficeLocations'] = get_office_addresses(doctor)
-                item.meta['NumInsurers']     = get_number_of_insurance_carriers(doctor)
+                item.meta['Name']                       = name
+                item.meta['Degree']                     = degree
+                item.meta['YearsInPractice']            = get_years_in_practice(doctor)
+                item.meta['NumOffices']                 = get_number_of_offices(doctor)
+                item.meta['OfficeLocations']            = get_office_addresses(doctor)
+                item.meta['NumInsurers']                = get_number_of_insurance_carriers(doctor)
+                item.meta['Specialties']                = get_specialties(doctor)
+                item.meta['NumHospitalAffiliations']    = get_hospital_affiliations(doctor)
 
                 yield item
 
@@ -120,14 +122,16 @@ class HealthgradesSpider(BaseSpider):
         else:
             semicolon_delimited = ("No insurance carriers listed")
 
-        item                    = HealthgradesItem()
-        item['Name']            = response.meta['Name']
-        item['Degree']          = response.meta['Degree']
-        item['YearsInPractice'] = response.meta['YearsInPractice']
-        item['NumOffices']      = response.meta['NumOffices']
-        item['OfficeLocations'] = response.meta['OfficeLocations']
-        item['NumInsurers']     = response.meta['NumInsurers']
-        item['AcceptedInsurers']= semicolon_delimited
+        item                            = HealthgradesItem()
+        item['Name']                    = response.meta['Name']
+        item['Degree']                  = response.meta['Degree']
+        item['YearsInPractice']         = response.meta['YearsInPractice']
+        item['NumOffices']              = response.meta['NumOffices']
+        item['OfficeLocations']         = response.meta['OfficeLocations']
+        item['NumInsurers']             = response.meta['NumInsurers']
+        item['Specialties']             = response.meta['Specialties']
+        item['NumHospitalAffiliations'] = response.meta['NumHospitalAffiliations']
+        item['AcceptedInsurers']        = semicolon_delimited
 
         return item
 
@@ -166,6 +170,25 @@ def get_office_addresses( doctor ):
         officeAddresses += ";"
 
     return officeAddresses
+
+def get_specialties( doctor ):
+    try:
+        specialties = doctor.find_element_by_xpath(".//div[@class='listingHeaderLeftColumn']/p").text
+        specialties = specialties.replace(', ', ';')
+    except NoSuchElementException:
+        specialties = "Specialties not listed"
+
+    return specialties
+
+def get_hospital_affiliations( doctor ):
+    try:
+        affiliations = doctor.find_element_by_partial_link_text('Hospital Affiliation').text
+        affiliations = re.findall(r"[\w'|-]+", affiliations)
+        affiliations = affiliations[0]
+    except NoSuchElementException:
+        affiliations = "Hospital affiliations not listed"
+
+    return affiliations
 
 def clean_many_insurance_carriers( insurance_carrier ):
     insurance_carrier = insurance_carrier.replace('</li></ul></li>', '')
