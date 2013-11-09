@@ -8,7 +8,7 @@ Things I'll need to get:
 **Num Office Locations
 **Office Addresses
 **Years in Practice
---Num Hospital Affiliations
+**Num Hospital Affiliations
 --Hospitals
 **Num Insurance Carriers
 **Which Insurance Carriers
