@@ -99,32 +99,26 @@ class HealthgradesSpider(BaseSpider):
         hxs = HtmlXPathSelector(response)
 
         insurance_carriers = hxs.select("///div[@id='appointmentsInsuranceAccepted']/div[@class='componentPresentationFull']/div[@class='componentPresentationContent']/ul/li").extract()
-        more_insurance_carriers = hxs.select("///div[@class='insurancesAccepted']/div[@class='expand-section']/ul[@class='noBottomMargin noTopMargin']/li").extract()
 
         if not insurance_carriers:
             insurance_carriers = hxs.select("//div[@class='insurancesAccepted']/ul[@class='noBottomMargin']/li").extract()
 
+        more_insurance_carriers = hxs.select("///div[@class='insurancesAccepted']/div[@class='expand-section']/ul[@class='noBottomMargin noTopMargin']/li").extract()
+        insurance_carriers.extend(more_insurance_carriers)
+
         if (insurance_carriers):
             semicolon_delimited = ''
             for insurance_carrier in insurance_carriers:
-                insurance_carrier = insurance_carrier.replace('</li></ul></li>', '')
-                insurance_carrier = re.sub(r"</?a.*?>", "", insurance_carrier)
-                insurance_carrier = insurance_carrier.replace('<li><span>', '').replace('</span></li>', '')
-                split_html = insurance_carrier.split('<li>')
-                insurance_carrier = split_html[-1]
+                if '<ul class="insurancePlanList"' in insurance_carrier:
+                    insurance_carrier = clean_many_insurance_carriers(insurance_carrier)
+                else:
+                    insurance_carrier = insurance_carrier.replace('<li><span>', '')
+                    insurance_carrier = insurance_carrier.replace('</span></li>', '')
+
                 semicolon_delimited += str(insurance_carrier) + ';'
 
         else:
             semicolon_delimited = ("No insurance carriers listed")
-            
-        if(more_insurance_carriers):
-            for insurance_carrier in more_insurance_carriers:
-                insurance_carrier = insurance_carrier.replace('</li></ul></li>', '')
-                insurance_carrier = re.sub(r"</?a.*?>", "", insurance_carrier)
-                insurance_carrier = insurance_carrier.replace('<li><span>', '').replace('</span></li>', '')
-                split_html = insurance_carrier.split('<li>')
-                insurance_carrier = split_html[-1]
-                semicolon_delimited += str(insurance_carrier) + ';'
 
         item                    = HealthgradesItem()
         item['Name']            = response.meta['Name']
@@ -172,3 +166,14 @@ def get_office_addresses( doctor ):
         officeAddresses += ";"
 
     return officeAddresses
+
+def clean_many_insurance_carriers( insurance_carrier ):
+    insurance_carrier = insurance_carrier.replace('</li></ul></li>', '')
+    insurance_carrier = re.sub(r"</?a.*?>", "", insurance_carrier)
+    insurance_carrier = insurance_carrier.replace('<li><span>', '').replace('</span></li>', '')
+    insurance_carrier = insurance_carrier.replace('<ul class="insurancePlanList" style="display:none">', '').replace('</li>', '')
+    split_html = insurance_carrier.split('<li>')
+    split_html = split_html[2:]
+    insurance_carrier = ";".join(split_html)
+
+    return insurance_carrier        

@@ -7,7 +7,7 @@ Things I'll need to get:
 --Specialties(;)
 **Num Office Locations
 **Office Addresses
---Years in Practice
+**Years in Practice
 --Num Hospital Affiliations
 --Hospitals
 **Num Insurance Carriers
