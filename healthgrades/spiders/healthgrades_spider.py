@@ -71,14 +71,14 @@ class HealthgradesSpider(BaseSpider):
                     pass
 
                 # Get number of insurance carriers
-                try:
-                    insurance_carrier_link  = doctor.find_element_by_xpath(".//div[@class='listingProfileContent']/ul/li[@class='dataDebug'][3]/a")
-                except NoSuchElementException:
-                    insurance_carrier_link  = doctor.find_element_by_xpath(".//div[@class='listingProfileContent']/ul/li[@class='dataDebug insuranceCarriers']/a")
+                # try:
+                #     insurance_carrier_link  = doctor.find_element_by_xpath(".//div[@class='listingProfileContent']/ul/li[@class='dataDebug'][3]/a")
+                # except NoSuchElementException:
+                #     insurance_carrier_link  = doctor.find_element_by_xpath(".//div[@class='listingProfileContent']/ul/li[@class='dataDebug insuranceCarriers']/a")
                 
-                num_insurance_carriers  = insurance_carrier_link.text
-                split_ins               = re.findall(r"[\w'|-]+", num_insurance_carriers)
-                num_insurance_carriers  = split_ins[0]
+                # num_insurance_carriers  = insurance_carrier_link.text
+                # split_ins               = re.findall(r"[\w'|-]+", num_insurance_carriers)
+                # num_insurance_carriers  = split_ins[0]
 
                 item = Request(url=doctor_name_link.get_attribute("href") + "/appointment",
                     callback=self.get_accepted_insurance_carriers)
@@ -87,7 +87,7 @@ class HealthgradesSpider(BaseSpider):
                 item.meta['YearsInPractice'] = get_years_in_practice(doctor)
                 item.meta['NumOffices']      = get_number_of_offices(doctor)
                 item.meta['OfficeLocations'] = get_office_addresses(doctor)
-                item.meta['NumInsurers']     = num_insurance_carriers
+                item.meta['NumInsurers']     = get_number_of_insurance_carriers(doctor)
 
                 yield item
 
@@ -145,6 +145,14 @@ def get_years_in_practice( doctor ):
         return years[0]
     except NoSuchElementException:
         return "Years not listed"
+
+def get_number_of_insurance_carriers( doctor ):
+    try:
+        num_carriers = doctor.find_element_by_partial_link_text("Insurance Carriers").text
+        num_carriers = re.findall(r"[\w'|-]+", num_carriers)
+        return num_carriers[0]
+    except NoSuchElementException:
+        return "Insurance carriers not listed"
 
 def get_number_of_offices( doctor ):
     try:
