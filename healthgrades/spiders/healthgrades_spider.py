@@ -24,7 +24,6 @@ class HealthgradesSpider(BaseSpider):
     def __init__(self, **kwargs):
         self.driver = webdriver.Firefox()
         driver = self.driver
-        driver.implicitly_wait(5)
         driver.get("http://www.healthgrades.com/find-a-doctor")
 
         state_form_entry = driver.find_element_by_id('multi_search_location_textbox')
@@ -98,6 +97,7 @@ class HealthgradesSpider(BaseSpider):
         driver.quit()
 
     def get_accepted_insurance_carriers(self, response):
+        root_url = response.url.replace('/appointment', '')
         hxs = HtmlXPathSelector(response)
 
         insurance_carriers = hxs.select("///div[@id='appointmentsInsuranceAccepted']/div[@class='componentPresentationFull']/div[@class='componentPresentationContent']/ul/li").extract()
@@ -133,7 +133,15 @@ class HealthgradesSpider(BaseSpider):
         item['NumHospitalAffiliations'] = response.meta['NumHospitalAffiliations']
         item['AcceptedInsurers']        = semicolon_delimited
 
-        return item
+        request = Request(url=root_url + '/background-check', callback=self.get_background)
+        request.meta['item'] = item
+
+        return request
+
+    def get_background(self, response):
+        oldItem = response.meta['item']
+
+        return oldItem
 
 # Helper Functions
 def get_years_in_practice( doctor ):
