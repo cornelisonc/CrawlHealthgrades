@@ -15,6 +15,7 @@ class HealthgradesItem(Item):
     AcceptedInsurers 		= Field()
     Specialties				= Field()
     NumHospitalAffiliations	= Field()
+    AffiliatedHospitals		= Field()
     MedicalSchool			= Field()
     Internship				= Field()
     Residency				= Field()

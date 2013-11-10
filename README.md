@@ -12,7 +12,7 @@ Things I'll need to get:
 --Hospitals
 **Num Insurance Carriers
 **Which Insurance Carriers
---Med School?
---Internship, with year?
---Residency, with year?
+**Med School?
+**Internship, with year?
+**Residency, with year?
 --Board Certified for what?
