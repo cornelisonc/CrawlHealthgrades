@@ -140,6 +140,31 @@ class HealthgradesSpider(BaseSpider):
 
     def get_background(self, response):
         oldItem = response.meta['item']
+        hxs = HtmlXPathSelector(response)
+
+        schools = hxs.select("///div[@id='backgroundEducationAndTraining2']/div[@class='componentPresentationLeftColumn']/div[@class='componentPresentationNav']/div").extract()
+        for school in schools:
+            if "Medical School" in school:
+                school_name = re.sub(r'(?s)<div>\s.*<dl><dt>', '', school)
+                school_name = re.sub(r'(?s)</dt>\s.*', '', school_name)
+                grad_year = re.findall(r'(?s)>([0-9]{4})<', school)
+                if not grad_year:
+                    grad_year = '0'
+                oldItem['MedicalSchool'] = school_name + ' (' + grad_year[0] + ')'
+            elif "Internship" in school:
+                school_name = re.sub(r'(?s)<div>\s.*<dl><dt>', '', school)
+                school_name = re.sub(r'(?s)</dt>\s.*', '', school_name)
+                grad_year = re.findall(r'(?s)>([0-9]{4})<', school)
+                if not grad_year:
+                    grad_year = '0'
+                oldItem['Internship'] = school_name + ' (' + grad_year[0] + ')'
+            elif "Residency" in school:
+                school_name = re.sub(r'(?s)<div>\s.*<dl><dt>', '', school)
+                school_name = re.sub(r'(?s)</dt>\s.*', '', school_name)
+                grad_year = re.findall(r'(?s)>([0-9]{4})<', school)
+                if not grad_year:
+                    grad_year = '0'
+                oldItem['Residency'] = school_name + ' (' + grad_year[0] + ')'
 
         return oldItem
 
