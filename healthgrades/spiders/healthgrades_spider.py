@@ -209,10 +209,12 @@ class HealthgradesSpider(BaseSpider):
         hxs  = HtmlXPathSelector(response)
         item = response.meta['item']
 
-        html = hxs.select("//h4/text()").extract()
+        hospital = hxs.select("//h4/text()").extract()
+        hospital_address = hxs.select("//p[@class='aboutFacilityContentHeaderContact']/strong/text()").extract()
+        hospital += ", " + hospital_address
 
         print("\n\n")        
-        print(html)
+        print(hospital)
         print("\n\n")
         return item
 
