@@ -211,7 +211,9 @@ class HealthgradesSpider(BaseSpider):
 
         hospital = hxs.select("//h4/text()").extract()
         hospital_address = hxs.select("//p[@class='aboutFacilityContentHeaderContact']/strong/text()").extract()
-        hospital += ", " + hospital_address
+        hospital.extend(", ")
+        hospital.extend(hospital_address)
+        hospital = ''.join(hospital)
 
         print("\n\n")        
         print(hospital)
