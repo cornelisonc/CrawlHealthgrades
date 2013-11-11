@@ -139,7 +139,7 @@ class HealthgradesSpider(BaseSpider):
         return request
 
     def get_background(self, response):
-        oldItem     = response.meta['item']
+        old_item     = response.meta['item']
         hxs         = HtmlXPathSelector(response)
         root_url    = response.url.replace('/background-check', '')
 
@@ -151,30 +151,30 @@ class HealthgradesSpider(BaseSpider):
                 grad_year = re.findall(r'(?s)>([0-9]{4})<', school)
                 if not grad_year:
                     grad_year = '0'
-                oldItem['MedicalSchool'] = school_name + ' (' + grad_year[0] + ')'
+                old_item['MedicalSchool'] = school_name + ' (' + grad_year[0] + ')'
             elif "Internship" in school:
                 school_name = re.sub(r'(?s)<div>\s.*<dl><dt>', '', school)
                 school_name = re.sub(r'(?s)</dt>\s.*', '', school_name)
                 grad_year = re.findall(r'(?s)>([0-9]{4})<', school)
                 if not grad_year:
                     grad_year = '0'
-                oldItem['Internship'] = school_name + ' (' + grad_year[0] + ')'
+                old_item['Internship'] = school_name + ' (' + grad_year[0] + ')'
             elif "Residency" in school:
                 school_name = re.sub(r'(?s)<div>\s.*<dl><dt>', '', school)
                 school_name = re.sub(r'(?s)</dt>\s.*', '', school_name)
                 grad_year = re.findall(r'(?s)>([0-9]{4})<', school)
                 if not grad_year:
                     grad_year = '0'
-                oldItem['Residency'] = school_name + ' (' + grad_year[0] + ')'
+                old_item['Residency'] = school_name + ' (' + grad_year[0] + ')'
 
         request = Request(url=root_url, callback=self.get_hospital_information)
-        request.meta['item'] = oldItem
+        request.meta['item'] = old_item
 
         return request
 
     def get_hospital_information(self, response):
         root_url    = response.url
-        oldItem     = response.meta['item']
+        old_item    = response.meta['item']
         hxs         = HtmlXPathSelector(response)
 
         hospitals = hxs.select("//div[@id='aboutHospitals2']/div[@class='componentPresentationLeftColumn']/div[@class='componentPresentationNav']/div/div[@class='positionRelative']").extract()
@@ -182,33 +182,39 @@ class HealthgradesSpider(BaseSpider):
         # If this page doesn't have the info, we need to send another request
         if not hospitals:
             request = Request(url=root_url + '/hospital-quality', callback=self.get_internal_hospital_information)
-            request.meta['item'] = oldItem
+            request.meta['item'] = old_item
 
             return request
 
         # else:
             # for hospital in hospitals:
 
-        return oldItem
+        return old_item
 
     def get_internal_hospital_information(self, response):
         hxs = HtmlXPathSelector(response)
+        old_item = response.meta['item']
 
         hospitals = hxs.select("//div[@id='aboutHospitalCarousel']/ul/li").extract()
 
-        print ("Internal Hospital: ")
         for hospital in hospitals:
             hospital = re.findall(r'(?s)<li data-facility-id="(.*?)"', hospital)
-            print(hospital[0])
-            hospitalName = Request(url="http://www.healthgrades.com/ajax/facility/" + hospital[0] + "/tab/ProviderAboutFacility", callback=self.process_ajax_hospital_request)
-            print(hospitalName)
+            item = Request(url="http://www.healthgrades.com/ajax/facility/" + hospital[0] + "/tab/ProviderAboutFacility", callback=self.process_ajax_hospital_request)
+            item.meta['item'] = old_item
 
-        return response.meta['item']
+        return item
+
 
     def process_ajax_hospital_request(self, response):
-        joe = "\n\n\nJoe\n\n\n"
-        print(joe)
-        return joe
+        hxs  = HtmlXPathSelector(response)
+        item = response.meta['item']
+
+        html = hxs.select("//h4/text()").extract()
+
+        print("\n\n")        
+        print(html)
+        print("\n\n")
+        return item
 
 # Helper Functions
 def get_years_in_practice( doctor ):
