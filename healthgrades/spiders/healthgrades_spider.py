@@ -139,8 +139,9 @@ class HealthgradesSpider(BaseSpider):
         return request
 
     def get_background(self, response):
-        oldItem = response.meta['item']
-        hxs = HtmlXPathSelector(response)
+        oldItem     = response.meta['item']
+        hxs         = HtmlXPathSelector(response)
+        root_url    = response.url.replace('/background-check', '')
 
         schools = hxs.select("///div[@id='backgroundEducationAndTraining2']/div[@class='componentPresentationLeftColumn']/div[@class='componentPresentationNav']/div").extract()
         for school in schools:
@@ -166,7 +167,48 @@ class HealthgradesSpider(BaseSpider):
                     grad_year = '0'
                 oldItem['Residency'] = school_name + ' (' + grad_year[0] + ')'
 
+        request = Request(url=root_url, callback=self.get_hospital_information)
+        request.meta['item'] = oldItem
+
+        return request
+
+    def get_hospital_information(self, response):
+        root_url    = response.url
+        oldItem     = response.meta['item']
+        hxs         = HtmlXPathSelector(response)
+
+        hospitals = hxs.select("//div[@id='aboutHospitals2']/div[@class='componentPresentationLeftColumn']/div[@class='componentPresentationNav']/div/div[@class='positionRelative']").extract()
+
+        # If this page doesn't have the info, we need to send another request
+        if not hospitals:
+            request = Request(url=root_url + '/hospital-quality', callback=self.get_internal_hospital_information)
+            request.meta['item'] = oldItem
+
+            return request
+
+        # else:
+            # for hospital in hospitals:
+
         return oldItem
+
+    def get_internal_hospital_information(self, response):
+        hxs = HtmlXPathSelector(response)
+
+        hospitals = hxs.select("//div[@id='aboutHospitalCarousel']/ul/li").extract()
+
+        print ("Internal Hospital: ")
+        for hospital in hospitals:
+            hospital = re.findall(r'(?s)<li data-facility-id="(.*?)"', hospital)
+            print(hospital[0])
+            hospitalName = Request(url="http://www.healthgrades.com/ajax/facility/" + hospital[0] + "/tab/ProviderAboutFacility", callback=self.process_ajax_hospital_request)
+            print(hospitalName)
+
+        return response.meta['item']
+
+    def process_ajax_hospital_request(self, response):
+        joe = "\n\n\nJoe\n\n\n"
+        print(joe)
+        return joe
 
 # Helper Functions
 def get_years_in_practice( doctor ):
