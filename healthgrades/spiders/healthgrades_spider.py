@@ -17,20 +17,18 @@ import string
 class HealthgradesSpider(BaseSpider):
     name = "healthgrades"
     allowed_domains = ["healthgrades.com"]
-    start_urls = [
-        "http://www.healthgrades.com/find-a-doctor"
-    ]
 
-    def __init__(self, **kwargs):
-        self.driver = webdriver.Firefox()
-        driver = self.driver
-        driver.get("http://www.healthgrades.com/find-a-doctor")
+    def __init__(self, *args, **kwargs):
+        self.start_urls = [kwargs.get('start_url')]
+        # self.driver = webdriver.Firefox()
+        # driver = self.driver
+        # driver.get("http://www.healthgrades.com/find-a-doctor")
 
-        state_form_entry = driver.find_element_by_id('multi_search_location_textbox')
-        state_form_entry.click()
-        state_form_entry.send_keys("Missouri")
+        # state_form_entry = driver.find_element_by_id('multi_search_location_textbox')
+        # state_form_entry.click()
+        # state_form_entry.send_keys("Missouri")
 
-        driver.find_element_by_xpath("//span[@class='hgSearchTable']/span[@class='hgSearchTableRow']/button[@class='buttonHeaderSearch']").click()
+        # driver.find_element_by_xpath("//span[@class='hgSearchTable']/span[@class='hgSearchTableRow']/button[@class='buttonHeaderSearch']").click()
         
         super(HealthgradesSpider, self).__init__()
 
@@ -45,7 +43,7 @@ class HealthgradesSpider(BaseSpider):
         current_page = 1
         next_page = 2
 
-        while current_page <= 1: #no_pages:
+        while current_page <= 4: #no_pages:
 
             doctors = []
             doctors.extend(driver.find_elements_by_xpath("//div[@class='listingInformationColumn']"))
@@ -167,10 +165,10 @@ class HealthgradesSpider(BaseSpider):
                     grad_year = '0'
                 old_item['Residency'] = school_name + ' (' + grad_year[0] + ')'
 
-        request = Request(url=root_url, callback=self.get_hospital_information)
-        request.meta['item'] = old_item
+        # request = Request(url=root_url, callback=self.get_hospital_information)
+        # request.meta['item'] = old_item
 
-        return request
+        return old_item
 
     def get_hospital_information(self, response):
         root_url    = response.url
@@ -178,13 +176,18 @@ class HealthgradesSpider(BaseSpider):
         hxs         = HtmlXPathSelector(response)
 
         hospitals = hxs.select("//div[@id='aboutHospitals2']/div[@class='componentPresentationLeftColumn']/div[@class='componentPresentationNav']/div/div[@class='positionRelative']").extract()
+        other_hospitals = hxs.select("//div[@id='aboutHospitals2']/div[@class='componentPresentationLeftColumn']/div[@class='componentPresentationNav']/div/div[@class='positionRelative']/dl").extract()
+        print("\n\nHospitals:")
+        print(hospitals)
+        print("Other Hospitals:")
+        print(str(other_hospitals) + "\n\n")
 
         # If this page doesn't have the info, we need to send another request
-        if not hospitals:
-            request = Request(url=root_url + '/hospital-quality', callback=self.get_internal_hospital_information)
-            request.meta['item'] = old_item
+        # if not hospitals:
+        #     request = Request(url=root_url + '/hospital-quality', callback=self.get_internal_hospital_information)
+        #     request.meta['item'] = old_item
 
-            return request
+        #     return request
 
         # else:
             # for hospital in hospitals:
@@ -194,6 +197,7 @@ class HealthgradesSpider(BaseSpider):
     def get_internal_hospital_information(self, response):
         hxs = HtmlXPathSelector(response)
         old_item = response.meta['item']
+        old_item['AffiliatedHospitals'] = []
 
         hospitals = hxs.select("//div[@id='aboutHospitalCarousel']/ul/li").extract()
 
@@ -215,9 +219,11 @@ class HealthgradesSpider(BaseSpider):
         hospital.extend(hospital_address)
         hospital = ''.join(hospital)
 
-        print("\n\n")        
-        print(hospital)
+        print("\n\n")    
+        item['AffiliatedHospitals'].extend(hospital)
+        print(item['AffiliatedHospitals'])
         print("\n\n")
+
         return item
 
 # Helper Functions
