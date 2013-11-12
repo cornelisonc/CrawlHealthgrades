@@ -19,7 +19,8 @@ class HealthgradesSpider(BaseSpider):
     allowed_domains = ["healthgrades.com"]
 
     def __init__(self, *args, **kwargs):
-        self.start_urls = [kwargs.get('start_url')]
+        crawl_state = [kwargs.get('state')]
+        self.start_urls = "http://www.healthgrades.com/provider-search-directory/search?q=&prof.type=provider&search.type=condition&loc=" + crawl_state + "&locIsSolrCity=false"
         # self.driver = webdriver.Firefox()
         # driver = self.driver
         # driver.get("http://www.healthgrades.com/find-a-doctor")
