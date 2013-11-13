@@ -52,8 +52,8 @@ class HealthgradesSpider(CrawlSpider):
             item.meta['Name']                       = name
             item.meta['Degree']                     = degree
             item.meta['YearsInPractice']            = get_years_in_practice(doctor)
-            # item.meta['NumOffices']                 = get_number_of_offices(doctor)
-            # item.meta['OfficeLocations']            = get_office_addresses(doctor)
+            item.meta['NumOffices']                 = get_number_of_offices(doctor)
+            item.meta['OfficeLocations']            = get_office_addresses(doctor)
             # item.meta['NumInsurers']                = get_number_of_insurance_carriers(doctor)
             # item.meta['Specialties']                = get_specialties(doctor)
             # item.meta['NumHospitalAffiliations']    = get_hospital_affiliations(doctor)
@@ -90,8 +90,8 @@ class HealthgradesSpider(CrawlSpider):
         item['Name']                    = response.meta['Name']
         item['Degree']                  = response.meta['Degree']
         item['YearsInPractice']         = response.meta['YearsInPractice']
-        # item['NumOffices']              = response.meta['NumOffices']
-        # item['OfficeLocations']         = response.meta['OfficeLocations']
+        item['NumOffices']              = response.meta['NumOffices']
+        item['OfficeLocations']         = response.meta['OfficeLocations']
         # item['NumInsurers']             = response.meta['NumInsurers']
         # item['Specialties']             = response.meta['Specialties']
         # item['NumHospitalAffiliations'] = response.meta['NumHospitalAffiliations']
