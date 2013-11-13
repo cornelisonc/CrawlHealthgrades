@@ -51,15 +51,17 @@ class HealthgradesSpider(BaseSpider):
 
                 # Get name and degree
                 doctor_name_link    = doctor.select(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']").extract()
-                print("Doctor name link")
-                print(doctor_name_link)
-                name                = doctor_name_link.text
-                split_text          = re.findall(r"[\w'|-]+", name)
+
+                name                = doctor.select(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']/text()").extract()
+                split_text          = re.findall(r"[\w'|-]+", str(name))
                 
                 degree = split_text[-1]
                 split_text.pop()
                 
                 name = ' '.join(split_text)
+
+                print("name:")
+                print(name)
 
                 # Expand all the office links
                 try:
