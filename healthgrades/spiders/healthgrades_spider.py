@@ -131,66 +131,24 @@ class HealthgradesSpider(CrawlSpider):
                     grad_year = '0'
                 old_item['Residency'] = school_name + ' (' + grad_year[0] + ')'
 
-        request = Request(url=root_url, callback=self.get_hospital_information)
-        request.meta['item'] = old_item
+        new_item = Request(url=root_url + "/hospital-quality", callback=self.get_hospital_information)
+        new_item.meta['item'] = old_item
 
-        return request
+        return new_item
 # 
     def get_hospital_information(self, response):
         root_url    = response.url
         old_item    = response.meta['item']
         hxs         = HtmlXPathSelector(response)
 
-        hospitals = hxs.select("//div[@id='aboutHospitals2']/div[@class='componentPresentationLeftColumn']/div[@class='componentPresentationNav']/div/div[@class='positionRelative']").extract()
-        other_hospitals = hxs.select("//div[@id='aboutHospitals2']/div[@class='componentPresentationLeftColumn']/div[@class='componentPresentationNav']/div/div[@class='positionRelative']/dl").extract()
-        print("\n\nHospitals:")
-        print(hospitals)
-        print("Other Hospitals:")
-        print(str(other_hospitals) + "\n\n")
+        hospitals = hxs.select("//td[@class='affiliatedHospLabel']/p/text()").extract()
 
-        # If this page doesn't have the info, we need to send another request
-        # if not hospitals:
-        #     request = Request(url=root_url + '/hospital-quality', callback=self.get_internal_hospital_information)
-        #     request.meta['item'] = old_item
+        if not hospitals:
+            return "Hospitals unavailable"
 
-        #     return request
-
-        # else:
-            # for hospital in hospitals:
-
+        hospitals_list = ';'.join(hospitals)
+        old_item['AffiliatedHospitals'] = hospitals_list
         return old_item
-
-    def get_internal_hospital_information(self, response):
-        hxs = HtmlXPathSelector(response)
-        old_item = response.meta['item']
-        old_item['AffiliatedHospitals'] = []
-
-        hospitals = hxs.select("//div[@id='aboutHospitalCarousel']/ul/li").extract()
-
-        for hospital in hospitals:
-            hospital = re.findall(r'(?s)<li data-facility-id="(.*?)"', hospital)
-            item = Request(url="http://www.healthgrades.com/ajax/facility/" + hospital[0] + "/tab/ProviderAboutFacility", callback=self.process_ajax_hospital_request)
-            item.meta['item'] = old_item
-
-        return item
-
-
-    def process_ajax_hospital_request(self, response):
-        hxs  = HtmlXPathSelector(response)
-        item = response.meta['item']
-
-        hospital = hxs.select("//h4/text()").extract()
-        hospital_address = hxs.select("//p[@class='aboutFacilityContentHeaderContact']/strong/text()").extract()
-        hospital.extend(", ")
-        hospital.extend(hospital_address)
-        hospital = ''.join(hospital)
-
-        print("\n\n")    
-        item['AffiliatedHospitals'].extend(hospital)
-        print(item['AffiliatedHospitals'])
-        print("\n\n")
-
-        return item
 
 # Helper Functions
 def get_years_in_practice( doctor ):
