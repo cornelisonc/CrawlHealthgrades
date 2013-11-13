@@ -89,13 +89,13 @@ class HealthgradesSpider(CrawlSpider):
         item                            = HealthgradesItem()
         item['Name']                    = response.meta['Name']
         item['Degree']                  = response.meta['Degree']
-        # item['YearsInPractice']         = response.meta['YearsInPractice']
+        item['YearsInPractice']         = response.meta['YearsInPractice']
         # item['NumOffices']              = response.meta['NumOffices']
         # item['OfficeLocations']         = response.meta['OfficeLocations']
         # item['NumInsurers']             = response.meta['NumInsurers']
         # item['Specialties']             = response.meta['Specialties']
         # item['NumHospitalAffiliations'] = response.meta['NumHospitalAffiliations']
-        # item['AcceptedInsurers']        = semicolon_delimited
+        item['AcceptedInsurers']        = semicolon_delimited
 
         # request = Request(url=root_url + '/background-check', callback=self.get_background)
         # request.meta['item'] = item
@@ -194,15 +194,13 @@ class HealthgradesSpider(CrawlSpider):
 
 # Helper Functions
 def get_years_in_practice( doctor ):
-    try:
-        years = doctor.select(".//a[contains(text(), 'Years of Practice')]/text()").extract()
-        years = re.findall(r'[0-9]{1,2}', str(years))
-        print("\n\n\nYears in Practice: ")
-        print(years)
-        print("\n\n\n")
-        return years
-    except NoSuchElementException:
+    years = doctor.select(".//a[contains(text(), 'Years of Practice')]/text()").extract()
+    years = re.findall(r'[0-9]{1,2}', str(years))
+
+    if not years:
         return "Years not listed"
+
+    return years
 
 def get_number_of_insurance_carriers( doctor ):
     try:
