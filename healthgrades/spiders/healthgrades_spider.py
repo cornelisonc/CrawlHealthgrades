@@ -50,7 +50,7 @@ class HealthgradesSpider(BaseSpider):
             for doctor in doctors:
 
                 # Get name and degree
-                doctor_name_link    = doctor.select(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']").extract()
+                doctor_name_link    = doctor.select(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']/@href").extract()
 
                 name                = doctor.select(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']/text()").extract()
                 split_text          = re.findall(r"[\w'|-]+", str(name))
@@ -59,17 +59,15 @@ class HealthgradesSpider(BaseSpider):
                 split_text.pop()
                 
                 name = ' '.join(split_text)
+                name = re.sub(r"u'", "", name)
 
-                print("name:")
-                print(name)
+                print("Doctor link name")
+                doctor_name_link = (str(doctor_name_link[0]))
+                doctor_name_link = doctor_name_link + "/appointment"
+                doctor_name_link = "http://www.healthgrades.com" + doctor_name_link
+                print(doctor_name_link)
 
-                # Expand all the office links
-                try:
-                    doctor.find_element_by_partial_link_text("more)").click()
-                except NoSuchElementException:
-                    pass
-
-                item = Request(url=doctor_name_link.get_attribute("href") + "/appointment",
+                item = Request(url=doctor_name_link,
                     callback=self.get_accepted_insurance_carriers)
                 item.meta['Name']                       = name
                 item.meta['Degree']                     = degree
@@ -231,24 +229,24 @@ class HealthgradesSpider(BaseSpider):
 # Helper Functions
 def get_years_in_practice( doctor ):
     try:
-        years = doctor.find_element_by_partial_link_text("Years of Practice").text
-        years = re.findall(r"[\w'|-]+", years)
+        years = doctor.select(".//a[contains(text(), 'Years of Practice')]/text()").extract()
+        years = re.findall(r"[\w'|-]+", str(years))
         return years[0]
     except NoSuchElementException:
         return "Years not listed"
 
 def get_number_of_insurance_carriers( doctor ):
     try:
-        num_carriers = doctor.find_element_by_partial_link_text("Insurance Carriers").text
-        num_carriers = re.findall(r"[\w'|-]+", num_carriers)
+        num_carriers = doctor.select(".//a[contains(text(), 'Insurance Carriers')]/text()").extract()
+        num_carriers = re.findall(r"[\w'|-]+", str(num_carriers))
         return num_carriers[0]
     except NoSuchElementException:
         return "Insurance carriers not listed"
 
 def get_number_of_offices( doctor ):
     try:
-        numOffices = doctor.find_element_by_partial_link_text("Office Location").text
-        numOffices = re.findall(r"[\w'|-]+", numOffices)
+        numOffices = doctor.select(".//a[contains(text(), 'Office Location')]/text()").extract()
+        numOffices = re.findall(r"[\w'|-]+", str(numOffices))
         numOffices = numOffices[0]
     except NoSuchElementException:
         numOffices = "Offices not listed"
@@ -257,8 +255,8 @@ def get_number_of_offices( doctor ):
 
 def get_office_addresses( doctor ):
     officeAddresses = ""
-    for office in doctor.find_elements_by_xpath(".//div[@class='addresses']/div[contains(@class, 'address')]"):
-        thisOffice = office.text.replace(' (less)','')
+    for office in doctor.select(".//div[@class='addresses']/div[contains(@class, 'address')]/text()").extract():
+        thisOffice = office.replace(' (less)','')
         officeAddresses += thisOffice
         officeAddresses += ";"
 
@@ -266,8 +264,8 @@ def get_office_addresses( doctor ):
 
 def get_specialties( doctor ):
     try:
-        specialties = doctor.find_element_by_xpath(".//div[@class='listingHeaderLeftColumn']/p").text
-        specialties = specialties.replace(', ', ';')
+        specialties = doctor.select(".//div[@class='listingHeaderLeftColumn']/p/text()").extract()
+        specialties = str(specialties).replace(', ', ';')
     except NoSuchElementException:
         specialties = "Specialties not listed"
 
@@ -275,8 +273,10 @@ def get_specialties( doctor ):
 
 def get_hospital_affiliations( doctor ):
     try:
-        affiliations = doctor.find_element_by_partial_link_text('Hospital Affiliation').text
-        affiliations = re.findall(r"[\w'|-]+", affiliations)
+        affiliations = doctor.select(".//a[contains(text(), 'Hospital Affiliation')]").extract()
+        print("Affiliations")
+        print(affiliations)
+        affiliations = re.findall(r"[\w'|-]+", str(affiliations))
         affiliations = affiliations[0]
     except NoSuchElementException:
         affiliations = "Hospital affiliations not listed"
