@@ -45,14 +45,14 @@ class HealthgradesSpider(BaseSpider):
 
         while current_page <= 4: #no_pages:
 
-            doctors = []
-            doctors.extend(driver.find_elements_by_xpath("//div[@class='listingInformationColumn']"))
+            doctors = hxs.select("//div[@class='listingInformationColumn']")
 
             for doctor in doctors:
 
                 # Get name and degree
-                doctor_name_link    = doctor.find_element_by_xpath(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']")
-                
+                doctor_name_link    = doctor.select(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']").extract()
+                print("Doctor name link")
+                print(doctor_name_link)
                 name                = doctor_name_link.text
                 split_text          = re.findall(r"[\w'|-]+", name)
                 
