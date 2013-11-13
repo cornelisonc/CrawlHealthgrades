@@ -5,7 +5,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import NoSuchElementException
-from scrapy.spider import BaseSpider
+from scrapy.contrib.spiders import CrawlSpider, Rule
+from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import HtmlXPathSelector
 from scrapy.http import Request, FormRequest
 from healthgrades.items import HealthgradesItem
@@ -14,25 +15,17 @@ import datetime
 import re
 import string
 
-class HealthgradesSpider(BaseSpider):
+class HealthgradesSpider(CrawlSpider):
     name = "healthgrades"
     allowed_domains = ["healthgrades.com"]
+    rules = (Rule(SgmlLinkExtractor(restrict_xpaths=('//a[contains(@href,"pagenumber=")]')), callback='parse_doctors_page', follow=True, ),)
 
     def __init__(self, crawl_state="Missouri", *args, **kwargs):
+        super(HealthgradesSpider, self).__init__(*args, **kwargs)
         self.start_urls = ["http://www.healthgrades.com/provider-search-directory/search?q=&prof.type=provider&search.type=condition&loc=" + crawl_state + "&locIsSolrCity=false"]
-        # self.driver = webdriver.Firefox()
-        # driver = self.driver
-        # driver.get("http://www.healthgrades.com/find-a-doctor")
+        self.f = open("urls",'wb')
 
-        # state_form_entry = driver.find_element_by_id('multi_search_location_textbox')
-        # state_form_entry.click()
-        # state_form_entry.send_keys("Missouri")
-
-        # driver.find_element_by_xpath("//span[@class='hgSearchTable']/span[@class='hgSearchTableRow']/button[@class='buttonHeaderSearch']").click()
-        
-        super(HealthgradesSpider, self).__init__()
-
-    def parse(self, response):
+    def parse_doctors_page(self, response):
         hxs = HtmlXPathSelector(response)
 
         # Get number of pages to flip through pagination
@@ -82,7 +75,7 @@ class HealthgradesSpider(BaseSpider):
                 driver.quit()
 
             if no_pages > 1 and current_page != no_pages:
-                next_page_link = driver.find_element_by_xpath("//a[@class='paginationRight']")
+                next_page_link = hxs.select("//a[@class='paginationRight']")
 
             if current_page != no_pages:
                 next_page_link.click()
