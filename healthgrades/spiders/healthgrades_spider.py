@@ -61,22 +61,20 @@ class HealthgradesSpider(BaseSpider):
                 name = ' '.join(split_text)
                 name = re.sub(r"u'", "", name)
 
-                print("Doctor link name")
                 doctor_name_link = (str(doctor_name_link[0]))
                 doctor_name_link = doctor_name_link + "/appointment"
                 doctor_name_link = "http://www.healthgrades.com" + doctor_name_link
-                print(doctor_name_link)
 
                 item = Request(url=doctor_name_link,
                     callback=self.get_accepted_insurance_carriers)
                 item.meta['Name']                       = name
                 item.meta['Degree']                     = degree
-                item.meta['YearsInPractice']            = get_years_in_practice(doctor)
-                item.meta['NumOffices']                 = get_number_of_offices(doctor)
-                item.meta['OfficeLocations']            = get_office_addresses(doctor)
-                item.meta['NumInsurers']                = get_number_of_insurance_carriers(doctor)
-                item.meta['Specialties']                = get_specialties(doctor)
-                item.meta['NumHospitalAffiliations']    = get_hospital_affiliations(doctor)
+                # item.meta['YearsInPractice']            = get_years_in_practice(doctor)
+                # item.meta['NumOffices']                 = get_number_of_offices(doctor)
+                # item.meta['OfficeLocations']            = get_office_addresses(doctor)
+                # item.meta['NumInsurers']                = get_number_of_insurance_carriers(doctor)
+                # item.meta['Specialties']                = get_specialties(doctor)
+                # item.meta['NumHospitalAffiliations']    = get_hospital_affiliations(doctor)
 
                 yield item
 
@@ -123,18 +121,18 @@ class HealthgradesSpider(BaseSpider):
         item                            = HealthgradesItem()
         item['Name']                    = response.meta['Name']
         item['Degree']                  = response.meta['Degree']
-        item['YearsInPractice']         = response.meta['YearsInPractice']
-        item['NumOffices']              = response.meta['NumOffices']
-        item['OfficeLocations']         = response.meta['OfficeLocations']
-        item['NumInsurers']             = response.meta['NumInsurers']
-        item['Specialties']             = response.meta['Specialties']
-        item['NumHospitalAffiliations'] = response.meta['NumHospitalAffiliations']
-        item['AcceptedInsurers']        = semicolon_delimited
+        # item['YearsInPractice']         = response.meta['YearsInPractice']
+        # item['NumOffices']              = response.meta['NumOffices']
+        # item['OfficeLocations']         = response.meta['OfficeLocations']
+        # item['NumInsurers']             = response.meta['NumInsurers']
+        # item['Specialties']             = response.meta['Specialties']
+        # item['NumHospitalAffiliations'] = response.meta['NumHospitalAffiliations']
+        # item['AcceptedInsurers']        = semicolon_delimited
 
-        request = Request(url=root_url + '/background-check', callback=self.get_background)
-        request.meta['item'] = item
+        # request = Request(url=root_url + '/background-check', callback=self.get_background)
+        # request.meta['item'] = item
 
-        return request
+        return item
 
     def get_background(self, response):
         old_item     = response.meta['item']
