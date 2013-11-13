@@ -128,7 +128,7 @@ class HealthgradesSpider(CrawlSpider):
         new_item.meta['item'] = old_item
 
         return new_item
-# 
+
     def get_hospital_information(self, response):
         root_url    = response.url
         old_item    = response.meta['item']
@@ -141,7 +141,7 @@ class HealthgradesSpider(CrawlSpider):
         else:
             hospitals_list = ';'.join(hospitals)
             old_item['AffiliatedHospitals'] = hospitals_list
-            
+
         return old_item
 
 # Helper Functions
