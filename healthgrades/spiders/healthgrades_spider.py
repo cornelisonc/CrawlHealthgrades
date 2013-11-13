@@ -33,11 +33,11 @@ class HealthgradesSpider(BaseSpider):
         super(HealthgradesSpider, self).__init__()
 
     def parse(self, response):
-        driver = self.driver
+        hxs = HtmlXPathSelector(response)
 
         # Get number of pages to flip through pagination
-        no_pages = driver.find_element_by_xpath("//span[@class='pagination']/span[3]")
-        no_pages = re.findall(r'\d+', no_pages.text)
+        no_pages = hxs.select("//span[@class='pagination']/span[3]/text()").extract()
+        no_pages = re.findall(r'\d+', no_pages[0])
         no_pages = int(no_pages[0])
         
         current_page = 1
