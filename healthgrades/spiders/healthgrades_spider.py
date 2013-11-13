@@ -51,7 +51,7 @@ class HealthgradesSpider(CrawlSpider):
                 callback=self.get_accepted_insurance_carriers)
             item.meta['Name']                       = name
             item.meta['Degree']                     = degree
-            # item.meta['YearsInPractice']            = get_years_in_practice(doctor)
+            item.meta['YearsInPractice']            = get_years_in_practice(doctor)
             # item.meta['NumOffices']                 = get_number_of_offices(doctor)
             # item.meta['OfficeLocations']            = get_office_addresses(doctor)
             # item.meta['NumInsurers']                = get_number_of_insurance_carriers(doctor)
@@ -196,8 +196,11 @@ class HealthgradesSpider(CrawlSpider):
 def get_years_in_practice( doctor ):
     try:
         years = doctor.select(".//a[contains(text(), 'Years of Practice')]/text()").extract()
-        years = re.findall(r"[\w'|-]+", str(years))
-        return years[0]
+        years = re.findall(r'[0-9]{1,2}', str(years))
+        print("\n\n\nYears in Practice: ")
+        print(years)
+        print("\n\n\n")
+        return years
     except NoSuchElementException:
         return "Years not listed"
 
