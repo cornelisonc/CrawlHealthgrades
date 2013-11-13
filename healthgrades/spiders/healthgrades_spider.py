@@ -30,7 +30,7 @@ class HealthgradesSpider(CrawlSpider):
             name                = doctor.select(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']/text()").extract()
             split_text          = re.findall(r"[\w'|-]+", str(name))
             
-            degree = split_text[-1]
+            degree = re.findall(r"[A-Z]{2}", str(name))
             split_text.pop()
             
             name = ' '.join(split_text)
@@ -43,7 +43,7 @@ class HealthgradesSpider(CrawlSpider):
             item = Request(url=doctor_name_link,
                 callback=self.get_accepted_insurance_carriers)
             item.meta['Name']                       = name
-            item.meta['Degree']                     = degree
+            item.meta['Degree']                     = degree[0]
             item.meta['YearsInPractice']            = get_years_in_practice(doctor)
             item.meta['NumOffices']                 = get_number_of_offices(doctor)
             item.meta['OfficeLocations']            = get_office_addresses(doctor)
@@ -176,7 +176,9 @@ def get_number_of_offices( doctor ):
 def get_office_addresses( doctor ):
     officeAddresses = ""
 
-    for office in doctor.select(".//div[@class='addresses']/div[contains(@class, 'address')]/text()").extract():
+    offices = doctor.select(".//div[@class='addresses']/div[contains(@class, 'address')]/text()").extract()
+    
+    for office in offices:
         thisOffice = office.replace(' (less)','')
         officeAddresses += thisOffice
         officeAddresses += ";"
@@ -188,9 +190,11 @@ def get_specialties( doctor ):
 
     if not specialties:
         return "Specialties not listed"
+
+    for specialty in specialties:   
+        these_specialties = (specialty).replace(', ', ';')
     
-    specialties = str(specialties).replace(', ', ';')
-    return specialties
+    return str(these_specialties)
 
 def get_hospital_affiliations( doctor ):
 
