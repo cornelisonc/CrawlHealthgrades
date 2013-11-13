@@ -1,14 +1,7 @@
-from selenium import selenium
-from selenium.selenium import selenium
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support.ui import Select
-from selenium.common.exceptions import NoSuchElementException
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import HtmlXPathSelector
-from scrapy.http import Request, FormRequest
+from scrapy.http import Request
 from healthgrades.items import HealthgradesItem
 import time
 import datetime
@@ -144,10 +137,11 @@ class HealthgradesSpider(CrawlSpider):
         hospitals = hxs.select("//td[@class='affiliatedHospLabel']/p/text()").extract()
 
         if not hospitals:
-            return "Hospitals unavailable"
-
-        hospitals_list = ';'.join(hospitals)
-        old_item['AffiliatedHospitals'] = hospitals_list
+            old_item['AffiliatedHospitals'] = "Hospitals unavailable"
+        else:
+            hospitals_list = ';'.join(hospitals)
+            old_item['AffiliatedHospitals'] = hospitals_list
+            
         return old_item
 
 # Helper Functions
