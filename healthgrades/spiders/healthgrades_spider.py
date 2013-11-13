@@ -55,8 +55,8 @@ class HealthgradesSpider(CrawlSpider):
             item.meta['NumOffices']                 = get_number_of_offices(doctor)
             item.meta['OfficeLocations']            = get_office_addresses(doctor)
             item.meta['NumInsurers']                = get_number_of_insurance_carriers(doctor)
-            # item.meta['Specialties']                = get_specialties(doctor)
-            # item.meta['NumHospitalAffiliations']    = get_hospital_affiliations(doctor)
+            item.meta['Specialties']                = get_specialties(doctor)
+            item.meta['NumHospitalAffiliations']    = get_hospital_affiliations(doctor)
 
             yield item
 
@@ -93,8 +93,8 @@ class HealthgradesSpider(CrawlSpider):
         item['NumOffices']              = response.meta['NumOffices']
         item['OfficeLocations']         = response.meta['OfficeLocations']
         item['NumInsurers']             = response.meta['NumInsurers']
-        # item['Specialties']             = response.meta['Specialties']
-        # item['NumHospitalAffiliations'] = response.meta['NumHospitalAffiliations']
+        item['Specialties']             = response.meta['Specialties']
+        item['NumHospitalAffiliations'] = response.meta['NumHospitalAffiliations']
         item['AcceptedInsurers']        = semicolon_delimited
 
         # request = Request(url=root_url + '/background-check', callback=self.get_background)
@@ -195,34 +195,35 @@ class HealthgradesSpider(CrawlSpider):
 # Helper Functions
 def get_years_in_practice( doctor ):
     years = doctor.select(".//a[contains(text(), 'Years of Practice')]/text()").extract()
-    years = re.findall(r'[0-9]{1,2}', str(years))
-
+    
     if not years:
         return "Years not listed"
 
-    return years
+    years = re.findall(r'[0-9]{1,2}', str(years))
+    return years[0]
 
 def get_number_of_insurance_carriers( doctor ):
     num_carriers = doctor.select(".//a[contains(text(), 'Insurance Carriers')]/text()").extract()
-    num_carriers = re.findall(r"[\w'|-]+", str(num_carriers))
-
+    
     if not num_carriers:
         return "Insurance carriers not listed"
-    
+
+    num_carriers = re.findall(r"[0-9]{1,2}", str(num_carriers))
     return num_carriers[0]
 
 def get_number_of_offices( doctor ):
-    try:
-        numOffices = doctor.select(".//a[contains(text(), 'Office Location')]/text()").extract()
-        numOffices = re.findall(r"[\w'|-]+", str(numOffices))
-        numOffices = numOffices[0]
-    except NoSuchElementException:
-        numOffices = "Offices not listed"
+    numOffices = doctor.select(".//a[contains(text(), 'Office Location')]/text()").extract()
 
+    if not numOffices:
+        return "Offices not listed"
+
+    numOffices = re.findall(r"[0-9]{1,2}", str(numOffices))
+    numOffices = numOffices[0]
     return numOffices
 
 def get_office_addresses( doctor ):
     officeAddresses = ""
+
     for office in doctor.select(".//div[@class='addresses']/div[contains(@class, 'address')]/text()").extract():
         thisOffice = office.replace(' (less)','')
         officeAddresses += thisOffice
@@ -231,24 +232,23 @@ def get_office_addresses( doctor ):
     return officeAddresses
 
 def get_specialties( doctor ):
-    try:
-        specialties = doctor.select(".//div[@class='listingHeaderLeftColumn']/p/text()").extract()
-        specialties = str(specialties).replace(', ', ';')
-    except NoSuchElementException:
-        specialties = "Specialties not listed"
+    specialties = doctor.select(".//div[@class='listingHeaderLeftColumn']/p/text()").extract()
 
+    if not specialties:
+        return "Specialties not listed"
+    
+    specialties = str(specialties).replace(', ', ';')
     return specialties
 
 def get_hospital_affiliations( doctor ):
-    try:
-        affiliations = doctor.select(".//a[contains(text(), 'Hospital Affiliation')]").extract()
-        print("Affiliations")
-        print(affiliations)
-        affiliations = re.findall(r"[\w'|-]+", str(affiliations))
-        affiliations = affiliations[0]
-    except NoSuchElementException:
-        affiliations = "Hospital affiliations not listed"
 
+    affiliations = doctor.select(".//a[contains(text(), 'Hospital Affiliation')]/text()").extract()
+
+    if not affiliations:
+        return "Hospital affiliations not listed"
+
+    affiliations = re.findall(r"[0-9]{1,2}", str(affiliations))
+    affiliations = affiliations[0]
     return affiliations
 
 def clean_many_insurance_carriers( insurance_carrier ):
