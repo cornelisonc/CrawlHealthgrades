@@ -23,67 +23,42 @@ class HealthgradesSpider(CrawlSpider):
     def __init__(self, crawl_state="Missouri", *args, **kwargs):
         super(HealthgradesSpider, self).__init__(*args, **kwargs)
         self.start_urls = ["http://www.healthgrades.com/provider-search-directory/search?q=&prof.type=provider&search.type=condition&loc=" + crawl_state + "&locIsSolrCity=false"]
-        self.f = open("urls",'wb')
 
     def parse_doctors_page(self, response):
         hxs = HtmlXPathSelector(response)
 
-        # Get number of pages to flip through pagination
-        no_pages = hxs.select("//span[@class='pagination']/span[3]/text()").extract()
-        no_pages = re.findall(r'\d+', no_pages[0])
-        no_pages = int(no_pages[0])
-        
-        current_page = 1
-        next_page = 2
+        doctors = hxs.select("//div[@class='listingInformationColumn']")
 
-        while current_page <= 4: #no_pages:
+        for doctor in doctors:
 
-            doctors = hxs.select("//div[@class='listingInformationColumn']")
+            # Get name and degree
+            doctor_name_link    = doctor.select(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']/@href").extract()
 
-            for doctor in doctors:
-
-                # Get name and degree
-                doctor_name_link    = doctor.select(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']/@href").extract()
-
-                name                = doctor.select(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']/text()").extract()
-                split_text          = re.findall(r"[\w'|-]+", str(name))
-                
-                degree = split_text[-1]
-                split_text.pop()
-                
-                name = ' '.join(split_text)
-                name = re.sub(r"u'", "", name)
-
-                doctor_name_link = (str(doctor_name_link[0]))
-                doctor_name_link = doctor_name_link + "/appointment"
-                doctor_name_link = "http://www.healthgrades.com" + doctor_name_link
-
-                item = Request(url=doctor_name_link,
-                    callback=self.get_accepted_insurance_carriers)
-                item.meta['Name']                       = name
-                item.meta['Degree']                     = degree
-                # item.meta['YearsInPractice']            = get_years_in_practice(doctor)
-                # item.meta['NumOffices']                 = get_number_of_offices(doctor)
-                # item.meta['OfficeLocations']            = get_office_addresses(doctor)
-                # item.meta['NumInsurers']                = get_number_of_insurance_carriers(doctor)
-                # item.meta['Specialties']                = get_specialties(doctor)
-                # item.meta['NumHospitalAffiliations']    = get_hospital_affiliations(doctor)
-
-                yield item
-
-            if current_page == no_pages:
-                driver.quit()
-
-            if no_pages > 1 and current_page != no_pages:
-                next_page_link = hxs.select("//a[@class='paginationRight']")
-
-            if current_page != no_pages:
-                next_page_link.click()
+            name                = doctor.select(".//div[@class='listingHeader']/div[@class='listingHeaderLeftColumn']/h2/a[@class='providerSearchResultSelectAction']/text()").extract()
+            split_text          = re.findall(r"[\w'|-]+", str(name))
             
-            current_page = next_page
-            next_page += 1
+            degree = split_text[-1]
+            split_text.pop()
+            
+            name = ' '.join(split_text)
+            name = re.sub(r"u'", "", name)
 
-        driver.quit()
+            doctor_name_link = (str(doctor_name_link[0]))
+            doctor_name_link = doctor_name_link + "/appointment"
+            doctor_name_link = "http://www.healthgrades.com" + doctor_name_link
+
+            item = Request(url=doctor_name_link,
+                callback=self.get_accepted_insurance_carriers)
+            item.meta['Name']                       = name
+            item.meta['Degree']                     = degree
+            # item.meta['YearsInPractice']            = get_years_in_practice(doctor)
+            # item.meta['NumOffices']                 = get_number_of_offices(doctor)
+            # item.meta['OfficeLocations']            = get_office_addresses(doctor)
+            # item.meta['NumInsurers']                = get_number_of_insurance_carriers(doctor)
+            # item.meta['Specialties']                = get_specialties(doctor)
+            # item.meta['NumHospitalAffiliations']    = get_hospital_affiliations(doctor)
+
+            yield item
 
     def get_accepted_insurance_carriers(self, response):
         root_url = response.url.replace('/appointment', '')
