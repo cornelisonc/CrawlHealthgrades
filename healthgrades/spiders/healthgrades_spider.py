@@ -97,10 +97,10 @@ class HealthgradesSpider(CrawlSpider):
         item['NumHospitalAffiliations'] = response.meta['NumHospitalAffiliations']
         item['AcceptedInsurers']        = semicolon_delimited
 
-        # request = Request(url=root_url + '/background-check', callback=self.get_background)
-        # request.meta['item'] = item
+        request = Request(url=root_url + '/background-check', callback=self.get_background)
+        request.meta['item'] = item
 
-        return item
+        return request
 
     def get_background(self, response):
         old_item     = response.meta['item']
@@ -131,11 +131,11 @@ class HealthgradesSpider(CrawlSpider):
                     grad_year = '0'
                 old_item['Residency'] = school_name + ' (' + grad_year[0] + ')'
 
-        # request = Request(url=root_url, callback=self.get_hospital_information)
-        # request.meta['item'] = old_item
+        request = Request(url=root_url, callback=self.get_hospital_information)
+        request.meta['item'] = old_item
 
-        return old_item
-
+        return request
+# 
     def get_hospital_information(self, response):
         root_url    = response.url
         old_item    = response.meta['item']
