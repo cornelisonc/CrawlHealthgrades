@@ -54,7 +54,7 @@ class HealthgradesSpider(CrawlSpider):
             item.meta['YearsInPractice']            = get_years_in_practice(doctor)
             item.meta['NumOffices']                 = get_number_of_offices(doctor)
             item.meta['OfficeLocations']            = get_office_addresses(doctor)
-            # item.meta['NumInsurers']                = get_number_of_insurance_carriers(doctor)
+            item.meta['NumInsurers']                = get_number_of_insurance_carriers(doctor)
             # item.meta['Specialties']                = get_specialties(doctor)
             # item.meta['NumHospitalAffiliations']    = get_hospital_affiliations(doctor)
 
@@ -92,7 +92,7 @@ class HealthgradesSpider(CrawlSpider):
         item['YearsInPractice']         = response.meta['YearsInPractice']
         item['NumOffices']              = response.meta['NumOffices']
         item['OfficeLocations']         = response.meta['OfficeLocations']
-        # item['NumInsurers']             = response.meta['NumInsurers']
+        item['NumInsurers']             = response.meta['NumInsurers']
         # item['Specialties']             = response.meta['Specialties']
         # item['NumHospitalAffiliations'] = response.meta['NumHospitalAffiliations']
         item['AcceptedInsurers']        = semicolon_delimited
@@ -203,12 +203,13 @@ def get_years_in_practice( doctor ):
     return years
 
 def get_number_of_insurance_carriers( doctor ):
-    try:
-        num_carriers = doctor.select(".//a[contains(text(), 'Insurance Carriers')]/text()").extract()
-        num_carriers = re.findall(r"[\w'|-]+", str(num_carriers))
-        return num_carriers[0]
-    except NoSuchElementException:
+    num_carriers = doctor.select(".//a[contains(text(), 'Insurance Carriers')]/text()").extract()
+    num_carriers = re.findall(r"[\w'|-]+", str(num_carriers))
+
+    if not num_carriers:
         return "Insurance carriers not listed"
+    
+    return num_carriers[0]
 
 def get_number_of_offices( doctor ):
     try:
