@@ -208,12 +208,8 @@ def get_hospital_affiliations( doctor ):
     return affiliations
 
 def clean_many_insurance_carriers( insurance_carrier ):
-    insurance_carrier = insurance_carrier.replace('</li></ul></li>', '')
-    insurance_carrier = re.sub(r"</?a.*?>", "", insurance_carrier)
-    insurance_carrier = insurance_carrier.replace('<li><span>', '').replace('</span></li>', '')
-    insurance_carrier = insurance_carrier.replace('<ul class="insurancePlanList" style="display:none">', '').replace('</li>', '')
-    split_html = insurance_carrier.split('<li>')
-    split_html = split_html[2:]
-    insurance_carrier = ";".join(split_html)
+    split_html = re.findall(r'<ul class="insurancePlanList" style="display:none">.*?</ul>', str(insurance_carrier))
+    carriers   = re.findall(r'<li>(.*?)</li>', str(split_html))
+    insurance_carriers = ";".join(carriers)
 
-    return insurance_carrier        
+    return insurance_carriers        
