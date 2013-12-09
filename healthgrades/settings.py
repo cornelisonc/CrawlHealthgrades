@@ -13,7 +13,7 @@ NEWSPIDER_MODULE = 'healthgrades.spiders'
 
 DOWNLOADER_MIDDLEWARES = {
         'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware' : None,
-        'healthgrades.extras.rotate_useragent.RotateUserAgentMiddleware' :400
+        'custom.rotate_useragent.RotateUserAgentMiddleware' :400
     }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent

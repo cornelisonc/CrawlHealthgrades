@@ -41,7 +41,7 @@ class HealthgradesSpider(CrawlSpider):
             doctor_name_link = "http://www.healthgrades.com" + doctor_name_link
 
             item = Request(url=doctor_name_link,
-                callback=self.get_accepted_insurance_carriers, errback=self.logerror)
+                callback=self.get_accepted_insurance_carriers)
             item.meta['Name']                       = name
             item.meta['Degree']                     = degree[0]
             item.meta['YearsInPractice']            = get_years_in_practice(doctor)
