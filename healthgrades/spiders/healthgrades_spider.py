@@ -10,6 +10,7 @@ import string
 
 class HealthgradesSpider(CrawlSpider):
     name = "healthgrades"
+    download_delay = .1
     allowed_domains = ["healthgrades.com"]
     rules = (Rule(SgmlLinkExtractor(restrict_xpaths=('//a[contains(@href,"pagenumber=")]')), callback='parse_doctors_page', follow=True, ),)
 
@@ -19,7 +20,6 @@ class HealthgradesSpider(CrawlSpider):
 
     def parse_doctors_page(self, response):
         hxs = HtmlXPathSelector(response)
-
         doctors = hxs.select("//div[@class='listingInformationColumn']")
 
         for doctor in doctors:
@@ -41,7 +41,7 @@ class HealthgradesSpider(CrawlSpider):
             doctor_name_link = "http://www.healthgrades.com" + doctor_name_link
 
             item = Request(url=doctor_name_link,
-                callback=self.get_accepted_insurance_carriers)
+                callback=self.get_accepted_insurance_carriers, errback=self.logerror)
             item.meta['Name']                       = name
             item.meta['Degree']                     = degree[0]
             item.meta['YearsInPractice']            = get_years_in_practice(doctor)
@@ -96,6 +96,7 @@ class HealthgradesSpider(CrawlSpider):
         return request
 
     def get_background(self, response):
+
         old_item     = response.meta['item']
         hxs         = HtmlXPathSelector(response)
         root_url    = response.url.replace('/background-check', '')
@@ -130,7 +131,7 @@ class HealthgradesSpider(CrawlSpider):
         return new_item
 
     def get_hospital_information(self, response):
-        root_url    = response.url
+        root_url    = response.url.replace('/hospital-quality', '')
         old_item    = response.meta['item']
         hxs         = HtmlXPathSelector(response)
 
@@ -142,6 +143,24 @@ class HealthgradesSpider(CrawlSpider):
             hospitals_list = ';'.join(hospitals)
             old_item['AffiliatedHospitals'] = hospitals_list
 
+        new_item = Request(url=root_url, callback=self.get_doctor_age)
+        new_item.meta['item'] = old_item
+
+        return new_item
+
+    def get_doctor_age(self, response):
+        root_url    = response.url.replace('/background-check', '')
+        old_item    = response.meta['item']
+        hxs         = HtmlXPathSelector(response)
+
+        age_block   = hxs.select("/html").extract()
+        age         = re.findall(r'(?s)Age ([0-9]{2})', str(age_block))
+
+        if age:
+            old_item['Age'] = age[0]
+        else:
+            old_item['Age'] = "Age not listed"
+            
         return old_item
 
 # Helper Functions
